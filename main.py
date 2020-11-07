@@ -5,7 +5,7 @@ import shutil, os
 INPUT_FOLDER_ARCHIVE = 'ARCHIVE/'
 OUTPUT_FOLDER = '_OUTPUT/'
 HTML_TEMPLATE = 'template.html'
-ENCODING = 'utf8' # 'cp1250' might be necessary on win
+ENCODING = 'utf-8'
 # ------------EOF CONFIG-------------------
 
 def createHtmlSkeleton(index=1):
@@ -13,25 +13,37 @@ def createHtmlSkeleton(index=1):
     shutil.copyfile(HTML_TEMPLATE, output_file)
     return output_file
 
-def appendOneImageToHtml(output_html_file, image_file, datetime, sport, name, notes):
+def appendOneImageToHtml(output_html_file, images, datetime, sport, name, notes):
     item_html = """
     <figure class="houba"><img alt="hovno" src="../ARCHIVE/<1IMAGE_FILE>" style="width: 350px; height: 350px;">
     <figcaption><DATETIME>(<SPORT>)<br>
       <span><b><NAME></b></span><br>
       <span><NOTES></span><br>
 
-      <IMAGES_FOLDER>
+      <IMAGES>
   </figure>
     """
-    item_html = item_html.replace('<1IMAGE_FILE>', image_file)
+    if len(images) > 0:
+        item_html = item_html.replace('<1IMAGE_FILE>', images[0])
     item_html = item_html.replace('<DATETIME>', datetime)
     item_html = item_html.replace('<SPORT>', sport)
     item_html = item_html.replace('<NOTES>', notes)
     item_html = item_html.replace('<NAME>', name)
-    if len(image_file) > 0:
-        item_html = item_html.replace('<IMAGES_FOLDER>', '<a href=../ARCHIVE/"' + image_file[:-8] + '">=FOTKY=</a>') #strip /big.jpg
+    
+    if len(images) == 0:
+        item_html = item_html.replace('<IMAGES>','')
+    elif len(images) == 1:     
+        item_html = item_html.replace('<IMAGES>', '<a href="../ARCHIVE/' + images[0] + '">FOTO1</a>')
+    elif len(images) == 2:     
+        item_html = item_html.replace('<IMAGES>', '<a href="../ARCHIVE/' + images[0] + '">FOTO1</a><a href="../ARCHIVE/' + images[1] + '">FOTO2</a>')
+    elif len(images) == 3:     
+        item_html = item_html.replace('<IMAGES>', '<a href="../ARCHIVE/' + images[0] + '">FOTO1</a><a href="../ARCHIVE/' + images[1] + '">FOTO2</a><a href="../ARCHIVE/' + images[2] + '">FOTO3</a>')    
+    elif len(images) == 4:     
+        item_html = item_html.replace('<IMAGES>', '<a href="../ARCHIVE/' + images[0] + '">FOTO1</a><a href="../ARCHIVE/' + images[1] + '">FOTO2</a><a href="../ARCHIVE/' + images[2] + '">FOTO3</a><a href="../ARCHIVE/' + images[3] + '">FOTO4</a>')  
+    elif len(images) == 5:     
+        item_html = item_html.replace('<IMAGES>', '<a href="../ARCHIVE/' + images[0] + '">FOTO1</a><a href="../ARCHIVE/' + images[1] + '">FOTO2</a><a href="../ARCHIVE/' + images[2] + '">FOTO3</a><a href="../ARCHIVE/' + images[3] + '">FOTO4</a><a href="../ARCHIVE/' + images[4] + '">FOTO5</a>')  
     else:
-        item_html = item_html.replace('<IMAGES_FOLDER>','')
+       item_html = item_html.replace('<IMAGES>', '<a href="../ARCHIVE/' + images[0] + '">FOTO1</a><a href="../ARCHIVE/' + images[1] + '">FOTO2</a><a href="../ARCHIVE/' + images[2] + '">FOTO3</a><a href="../ARCHIVE/' + images[3] + '">FOTO4</a><a href="../ARCHIVE/' + images[4] + '">FOTO5</a>')
 
     f = open(output_html_file, "r", encoding=ENCODING)
     contents = f.readlines()
@@ -63,12 +75,12 @@ for subdir, dirs, files in os.walk(INPUT_FOLDER_ARCHIVE + "/Workouts"):
         start_time = ""
         name = ""
         notes = ""
-        img_url = ""
+        images = []
         sport = ""
 
         if file[-4:] == "json":
 
-            with open(os.path.join(subdir, file)) as json_file:
+            with open(os.path.join(subdir, file), "r",encoding=ENCODING) as json_file:
                 data = json.load(json_file)
 
             for d in data:
@@ -87,10 +99,23 @@ for subdir, dirs, files in os.walk(INPUT_FOLDER_ARCHIVE + "/Workouts"):
                 if 'pictures' in d:
                     for dd in d['pictures']:
                         print(dd[1]['picture'][0][0]['url'])
-                        img_url = dd[1]['picture'][0][0]['url']
-            print("---")
+                        images.append (dd[1]['picture'][0][0]['url'])
+                        
+                        if len(d) > 3 :
+                            print(dd[3]['picture'][0][0]['url'])
+                            images.append (dd[3]['picture'][0][0]['url'])
+                        if len(d) > 5 :
+                            print(dd[3]['picture'][0][0]['url'])
+                            images.append (dd[5]['picture'][0][0]['url'])
+                        if len(d) > 7 :
+                            print(dd[3]['picture'][0][0]['url'])
+                            images.append (dd[7]['picture'][0][0]['url'])
+                        if len(d) > 9 :
+                            print(dd[3]['picture'][0][0]['url'])
+                            images.append (dd[9]['picture'][0][0]['url'])   
+            print("---")            
 
-            appendOneImageToHtml(output_file, img_url, start_time, sport, name, notes)
+            appendOneImageToHtml(output_file, images, start_time, sport, name, notes)
             fileCounter += 1
             if fileCounter % 100 == 0:
                 print(str(fileCounter))
